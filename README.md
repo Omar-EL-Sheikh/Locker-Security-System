@@ -24,6 +24,7 @@ following components:
   - L293D Motor Driver
   - M24C16 EEPROM
   - Buzzer
+
 Drivers:
   - GPIO
   - UART
