@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;HMI_ECU/HMI_Application&apos;" deleteContents="false" description="Delete resource &apos;HMI_ECU/HMI_Application&apos;" element1="/HMI_ECU/HMI_Application" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1666898032347"/>&#x0A;<refactoring comment="Delete 2 resources" deleteContents="false" description="Delete 2 resources" element1="/HMI_ECU/keypad.c" element2="/HMI_ECU/keypad.h" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="2" stamp="1666916377502"/>
+</session>

@@ -1,0 +1,210 @@
+/*
+ * HMI_Application.c
+ *
+ *  Created on: Oct 27, 2022
+ *      Author: Omar EL-Sheikh
+ */
+#include "gpio.h"
+#include "std_types.h"
+#include "lcd.h"
+#include <util/delay.h>
+#include "uart.h"
+#include "timer1.h"
+#include "keypad.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
+
+#define PASSWORD_SIZE 5
+#define PASSWORD_ENTER_KEY 13
+#define CONTROL_READY_TO_RECEIVE 0XAA
+#define HMI_READY_TO_RECEIVE 0XBB
+#define PASSWORD_CONFIRMED TRUE
+#define PASSWORD_UNCONFIRMED FALSE
+
+/* Variable to store UART Configurations */
+UART_ConfigType UART_Configs = {BITS_8, NO_PARITY, BIT_1, BAUD_RATE_9600};
+
+/* Global variable to store system password */
+uint8 g_password [PASSWORD_SIZE];
+
+/*Boolean variable to confirm password */
+boolean g_passwordConfirm = PASSWORD_UNCONFIRMED;
+
+/*
+ * Description:
+ * Function to initiate all required Drivers
+ */
+void Drivers_Init(void){
+	UART_init(&UART_Configs);
+	LCD_init();
+}
+
+/*
+ * Description:
+ * Function to take password from user
+ */
+void getPassword(void){
+	uint8 temp = 0;
+	uint8 counter = 0;
+
+	/* Receiving exactly 5-digits password from user before user presses Enter*/
+	while (temp != PASSWORD_ENTER_KEY || counter < PASSWORD_SIZE){
+		temp = KEYPAD_getPressedKey();
+		_delay_ms(500);
+
+		/* Accepting only digits from 0 to 9 */
+		if (temp <= 9 && counter < 5){
+			g_password[counter] = temp;
+			LCD_displayCharacter('*');
+			counter++;
+		}
+
+	}
+}
+
+/*
+ * Description:
+ * Function to create or change system password
+ */
+void createPassword (void){
+	LCD_clearScreen();
+	LCD_displayString("Please Enter");
+	LCD_moveCursor(1,0);
+	LCD_displayString("Password: ");
+
+	getPassword(); /* Receiving password from user */
+	sendPassword(); /* Sending password to Control ECU */
+
+	LCD_clearScreen();
+	LCD_moveCursor(0,0);
+	LCD_displayString("Please Re-enter");
+	LCD_moveCursor(1,0);
+	LCD_displayString("Password: ");
+
+	getPassword(); /* Receiving password again from user for confirmation */
+	sendPassword(); /* Sending password again to be confirmed */
+
+	/* Sending an indicator that the HMI ECU is ready to receive confirmation from Control ECU */
+	UART_sendByte(HMI_READY_TO_RECEIVE);
+	/* Receiving confirmation from Control ECU */
+	g_passwordConfirm = UART_recieveByte();
+}
+
+/*
+ * Description:
+ * Function to send system password to Control ECU by UART
+ */
+void sendPassword(void){
+	uint8 counter;
+
+	/* Waiting for Control ECU to be ready to receive data */
+	while (UART_recieveByte() != CONTROL_READY_TO_RECEIVE);
+
+	/* Sending password by UART */
+	for (counter = 0; counter < 5; counter++){
+
+		UART_sendByte(g_password[counter]);
+	}
+
+}
+
+/*
+ * Description:
+ * Function to lock the system for 1 minute
+ */
+void lockSystem(void){
+	sint8 counter;
+
+	LCD_clearScreen();
+	LCD_displayString("System is Locked");
+	LCD_moveCursor(1,0);
+	LCD_displayString("Unlocking in: ");
+
+	/* Freezing the system for 60 seconds */
+	for (counter = 59; counter >= 0; counter--){
+		LCD_moveCursor(1,14);
+		LCD_intgerToString(counter);
+		if(counter < 10){
+			LCD_displayCharacter(' ');
+		}
+		_delay_ms(1000);
+	}
+}
+
+/*
+ * Description:
+ * Function to process data in case of user choose to open door
+ */
+void openDoor(void){
+	g_passwordConfirm = PASSWORD_UNCONFIRMED;
+	uint8 passwordErrorCount = 0;
+
+	while(!g_passwordConfirm){
+
+
+		LCD_clearScreen();
+		LCD_displayString("Please Enter");
+		LCD_moveCursor(1,0);
+		LCD_displayString("Password: ");
+
+		/* Receiving password from user to open the door */
+		getPassword();
+		sendPassword();
+
+		/* Sending an indicator that the HMI ECU is ready to receive confirmation from Control ECU */
+		UART_sendByte(HMI_READY_TO_RECEIVE);
+		/* Receiving confirmation from Control ECU */
+		g_passwordConfirm = UART_recieveByte();
+
+		passwordErrorCount++;
+	}
+}
+
+/*
+ * Description:
+ * Function to display main system options
+ * Take an option from user
+ * Send the option to Control ECU  */
+void mainOptions(void){
+	uint8 option = '\0';
+	LCD_clearScreen();
+	LCD_displayString(" + : Open Door ");
+	LCD_moveCursor(1,0);
+	LCD_displayString(" - : Change Pass ");
+
+	/* Taking input from Keypad until user enters a valid button*/
+	while (option != '+' && option != '-'){
+		option = KEYPAD_getPressedKey();
+		_delay_ms(500);
+	}
+
+	/* Waiting for Control ECU to be ready to receive data */
+	while (UART_recieveByte() != CONTROL_READY_TO_RECEIVE);
+	/* Sending Option to Control ECU */
+	UART_sendByte(option);
+
+	switch (option){
+	case '+' :
+		openDoor();
+		break;
+
+	case '-' :
+
+		break;
+	}
+}
+
+
+int main(void){
+	Drivers_Init();
+
+	/* Asking user to create password and confirm until a confirmation occurs  */
+	while (!g_passwordConfirm){
+		createPassword();
+	}
+
+	while(1){
+		g_passwordConfirm = PASSWORD_UNCONFIRMED;
+		mainOptions();
+	}
+}
