@@ -1,4 +1,5 @@
 # Locker-Security-System
+![Screenshot (525)](https://user-images.githubusercontent.com/79065694/216328732-6244f2b3-2c1e-4ecf-955b-9968d7c61e1d.png)
 Description:
 A door locker security system to unlock door using registered password on two ATmega32 
 microcontrollers.
