@@ -1,37 +1,23 @@
-# Locker-Security-System
-![Screenshot (525)](https://user-images.githubusercontent.com/79065694/216328732-6244f2b3-2c1e-4ecf-955b-9968d7c61e1d.png)
-Description:
-A door locker security system to unlock door using registered password on two ATmega32 
-microcontrollers.
-The system uses Two ECUs connected using UART.
-The first ECU (HMI) is responsible for interfacing with the Keypad for input and LCD for
-displaying messages.
-The second ECU (CONTROL) is responsible for all the processing and decisions in the system like 
-password checking, opening the door and activating the system alarm.
-The system is designed to take password from user for the first time and save it in the EEPROM.
-The main menu has two options Open Door or Change Password which both require password 
-confirmation from user, if the password is wrong for three consecutive times, the system makes 
-an alert using the buzzer and locked for one minute.
+# My Awesome Project
 
-Programming Language(s):
-This project is written in C programming language.
+## Description
+A brief description of my awesome project.
 
-Hardware Implementation:
-This project is implemented on two ATmega32 MC with a frequency of 8Mhz connected to the 
-following components:
-  - Keypad
-  - LM016L LCD
-  - DC Motor
-  - L293D Motor Driver
-  - M24C16 EEPROM
-  - Buzzer
+## Languages
+The project is primarily written in Python, JavaScript.
 
-Drivers:
-  - GPIO
-  - UART
-  - I2C or TWI
-  - DC Motor
-  - LCD
-  - Timer
-  - EEPROM
-  - Buzzer
+## Written In
+Python
+
+## Hardware Implementation or Target MCU
+Arduino Uno
+
+## Usage
+Provide instructions on how to use the project.
+
+## Contributing
+Explain how others can contribute to the project.
+
+## License
+Specify the project's license.
+
